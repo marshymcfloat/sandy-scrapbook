@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.wrangler/
+.dev.vars*
+.r2.vars*
+.production.json
+.playwright-cli/
+*.mp4
+*.webm

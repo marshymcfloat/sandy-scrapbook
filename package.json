@@ -1,0 +1,30 @@
+{
+  "name": "sandyfave",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "check": "tsc --noEmit",
+    "dev": "npm run build && wrangler dev --port 8787",
+    "deploy": "npm run build && wrangler deploy",
+    "test": "node --test",
+    "media:local": "node scripts/media-local.mjs",
+    "media:upload": "node --env-file-if-exists=.r2.vars scripts/media-upload.mjs"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1169.0",
+    "@aws-sdk/lib-storage": "^3.1169.0",
+    "@fontsource-variable/dm-sans": "^5.3.0",
+    "@fontsource/caveat": "^5.3.0",
+    "@fontsource/instrument-serif": "^5.3.0",
+    "esbuild": "^0.28.2",
+    "gsap": "^3.15.1"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261116.1",
+    "miniflare": "5.20261113.0-beta",
+    "typescript": "^7.0.2",
+    "wrangler": "^4.162.0"
+  }
+}

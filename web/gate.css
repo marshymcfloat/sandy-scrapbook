@@ -1,0 +1,300 @@
+.gate-page {
+  color-scheme: light;
+  --gate-ink: #342a35;
+  --gate-muted: #746272;
+  --gate-pencil: #8c748a;
+  --gate-focus: #75466e;
+  --gate-action: #6e526a;
+  --gate-error: #95384e;
+  color: var(--gate-ink);
+  background: #fff;
+}
+
+.gate {
+  display: grid;
+  place-items: center;
+  min-height: 100svh;
+  padding: clamp(54px, 6vw, 74px) clamp(10px, 3.5vw, 58px) clamp(43px, 5vw, 63px);
+}
+
+.gate-journal {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-areas: "art" "content";
+  grid-template-columns: minmax(0, 1fr);
+  align-content: center;
+  gap: 16px;
+  width: min(100%, 435px);
+  aspect-ratio: 2 / 3;
+  padding: clamp(28px, 8vw, 44px) clamp(27px, 7vw, 46px)
+    clamp(36px, 9vw, 54px) clamp(46px, 13vw, 67px);
+}
+
+.gate-doodles {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  fill: none;
+  stroke: #665761;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.gate-doodles svg {
+  position: absolute;
+  display: block;
+  height: auto;
+}
+
+.gate-doodles path { vector-effect: non-scaling-stroke; }
+
+.gate-doodle-arrow {
+  inset: auto auto calc(100% + 6px) 8%;
+  width: clamp(42px, 5.7vw, 72px);
+}
+
+.gate-doodle-hearts {
+  inset: auto 8% calc(100% + 3px) auto;
+  width: clamp(40px, 4.4vw, 59px);
+}
+
+.gate-doodle-sparkles {
+  inset: calc(100% + 5px) auto auto 13%;
+  width: clamp(29px, 3.45vw, 43px);
+}
+
+.gate-doodle-loop {
+  inset: calc(100% + 6px) 8% auto auto;
+  width: clamp(47px, 6.6vw, 87px);
+}
+
+.gate-notebook {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.gate-notebook img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+}
+
+.gate-content {
+  grid-area: content;
+  min-width: 0;
+}
+
+.gate-signature,
+.gate-form {
+  width: min(100%, 350px);
+}
+
+.gate-signature {
+  display: block;
+  height: auto;
+}
+
+.gate-signature path,
+.gate-doodle-arrow path,
+.gate-doodle-loop path { stroke-dasharray: 1 2; }
+
+@media (prefers-reduced-motion: no-preference) and (scripting: enabled) {
+  .gate:not([data-feedback], [data-ready], :focus-within)
+    :is(.gate-signature, .gate-pencil-stroke, .gate-entry, .gate-doodles, .gate-illustration) {
+    animation: gate-intro-fallback 0s 1.3s backwards;
+  }
+}
+
+@keyframes gate-intro-fallback {
+  from { opacity: 0; pointer-events: none; }
+}
+
+.gate-pencil-stroke {
+  display: block;
+  width: min(67%, 207px);
+  height: 7px;
+  margin: 9px 0 0 4px;
+  border-top: 2px solid #9d6e92;
+  border-bottom: 1px solid #bc8bac;
+  border-radius: 50% 42% 50% 38%;
+  rotate: -3deg;
+  transform-origin: left center;
+}
+
+.gate-form {
+  display: grid;
+  gap: 8px;
+  margin-top: 23px;
+}
+
+.gate-entry {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 14px;
+  padding-bottom: 25px;
+}
+
+.gate-field {
+  position: relative;
+  color: var(--gate-pencil);
+}
+
+.gate-field:hover,
+.gate-field:focus-within { color: var(--gate-focus); }
+.gate-field:has(input[aria-invalid="true"]) { color: var(--gate-error); }
+
+.gate-field input {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 10px 3px 4px;
+  color: var(--gate-ink);
+  caret-color: var(--gate-focus);
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  font-size: 1rem;
+}
+
+.gate-field input::placeholder {
+  color: var(--gate-muted);
+  font-family: "Caveat", var(--sans);
+  font-size: 1.4375rem;
+  font-weight: 500;
+  opacity: 1;
+}
+
+.gate-field input:autofill {
+  -webkit-text-fill-color: var(--gate-ink);
+  box-shadow: inset 0 0 0 1000px #f2ece4;
+}
+
+.gate-field svg,
+.gate-submit svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.gate-field svg {
+  position: absolute;
+  pointer-events: none;
+}
+
+.gate-field-rule {
+  inset: auto 0 0;
+  width: 100%;
+  height: 8px;
+}
+
+.gate-field-rule path { vector-effect: non-scaling-stroke; }
+
+.gate-field-arrow {
+  top: 100%;
+  left: 7px;
+  width: 49px;
+  height: auto;
+  color: var(--gate-pencil);
+}
+
+.gate-field input:focus-visible ~ .gate-field-rule { stroke-width: 3; }
+.gate-field input:focus-visible { outline: 2px solid transparent; }
+
+@media (forced-colors: active) {
+  .gate-field input:focus-visible {
+    outline-color: Highlight;
+    outline-offset: 2px;
+  }
+}
+
+.gate-form [role="alert"] {
+  color: var(--gate-error);
+  font-size: .875rem;
+}
+
+.gate-submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 4px 3px 0;
+  color: var(--gate-action);
+  background: transparent;
+  border: 0;
+  border-radius: 3px;
+  font: 500 1.4375rem/1 "Caveat", var(--sans);
+  transition: color 180ms var(--ease-entrance);
+}
+
+.gate-submit svg { width: 21px; }
+.gate-submit:hover,
+.gate-submit:active { color: var(--gate-ink); }
+
+.gate-submit:hover span {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.gate-submit:focus-visible {
+  outline: 2px solid var(--gate-focus);
+  outline-offset: 2px;
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .gate-submit svg { transition: transform 180ms var(--ease-entrance); }
+  .gate-submit:hover svg { transform: translateX(2px); }
+}
+
+.gate-illustration {
+  grid-area: art;
+  width: min(100%, 182px);
+  margin-inline: auto;
+}
+
+.gate-illustration img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+@media (min-width: 740px) {
+  .gate-journal {
+    align-items: center;
+    grid-template-areas: "content art";
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: min(100%, 1100px);
+    aspect-ratio: 1.77;
+    gap: clamp(57px, 9vw, 124px);
+    padding: clamp(50px, 6.6vw, 86px) clamp(43px, 6.6vw, 94px);
+  }
+
+  .gate-pencil-stroke { margin-top: 11px; }
+  .gate-form { margin-top: 27px; }
+  .gate-illustration { width: min(100%, 381px); }
+}
+
+@media (min-width: 1280px) {
+  .gate { padding-block: 27px 31px; }
+
+  .gate-doodle-arrow,
+  .gate-doodle-loop {
+    width: clamp(52px, calc((100vw - 1100px) / 2 - 20px), 85px);
+  }
+
+  .gate-doodle-arrow { inset: 9% calc(100% + 8px) auto auto; }
+  .gate-doodle-hearts { inset: 5% auto auto calc(100% + 13px); }
+  .gate-doodle-sparkles { inset: auto calc(100% + 22px) 12% auto; }
+  .gate-doodle-loop { inset: auto auto 8% calc(100% + 6px); }
+}

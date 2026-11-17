@@ -1,0 +1,24 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "sandyfave",
+  "main": "src/worker.ts",
+  "compatibility_date": "2026-01-01",
+  "workers_dev": true,
+  "preview_urls": false,
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "run_worker_first": true,
+    "html_handling": "none"
+  },
+  "r2_buckets": [
+    { "binding": "MEDIA", "bucket_name": "sandyfave-media" }
+  ],
+  "ratelimits": [
+    {
+      "name": "UNLOCK_LIMITER",
+      "namespace_id": "802154",
+      "simple": { "limit": 10, "period": 60 }
+    }
+  ]
+}
