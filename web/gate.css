@@ -161,12 +161,12 @@
   background: transparent;
   border: 0;
   border-radius: 0;
-  font-size: 1rem;
+  font-size: 1.4375rem;
 }
 
 .gate-field input::placeholder {
   color: var(--gate-muted);
-  font-family: "Caveat", var(--sans);
+  font-family: var(--hand);
   font-size: 1.4375rem;
   font-weight: 500;
   opacity: 1;
@@ -219,7 +219,7 @@
 
 .gate-form [role="alert"] {
   color: var(--gate-error);
-  font-size: .875rem;
+  font-size: 1.125rem;
 }
 
 .gate-submit {
@@ -234,7 +234,7 @@
   background: transparent;
   border: 0;
   border-radius: 3px;
-  font: 500 1.4375rem/1 "Caveat", var(--sans);
+  font: 500 1.4375rem/1 var(--hand);
   transition: color 180ms var(--ease-entrance);
 }
 

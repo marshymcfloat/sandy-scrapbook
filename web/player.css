@@ -116,10 +116,19 @@ body:has(.movie-screen[data-expanded="true"]) {
   border-radius: 4px 5px 3px 4px;
   background: #fcf7ee;
   color: #4b354a;
-  font: 500 0.6875rem/1.5 var(--sans);
+  font: 500 1rem/1.3 var(--hand);
   white-space: nowrap;
   opacity: 0;
   pointer-events: none;
+}
+.player-control-row > .player-button:first-child::after {
+  left: 0;
+  translate: none;
+}
+.player-control-row > .player-button:last-child::after {
+  left: auto;
+  right: 0;
+  translate: none;
 }
 @media (hover: hover) {
   .player-button[data-tooltip]:hover::after {
@@ -129,7 +138,7 @@ body:has(.movie-screen[data-expanded="true"]) {
 .player-time {
   margin-inline: 5px auto;
   white-space: nowrap;
-  font-size: 0.6875rem;
+  font-size: 1.0625rem;
   line-height: 1;
   font-variant-numeric: tabular-nums;
 }
@@ -332,7 +341,7 @@ body:has(.movie-screen[data-expanded="true"]) {
   place-items: center;
   border: 1px solid #d3c0d0;
   border-radius: 4px 6px 5px 4px;
-  font-size: 0.6875rem;
+  font-size: 1rem;
   background: #fffaf3;
 }
 .player-speed-option input:checked + span {
@@ -357,7 +366,7 @@ body:has(.movie-screen[data-expanded="true"]) {
   border-top: 1px solid #e2d5dc;
   background: transparent;
   color: inherit;
-  font-size: 0.6875rem;
+  font-size: 1rem;
 }
 .player-pip:hover {
   background: #eee3ee;
@@ -394,13 +403,36 @@ body:has(.movie-screen[data-expanded="true"]) {
   }
   .player-time {
     margin-inline: 3px auto;
-    font-size: 0.625rem;
+    font-size: .9375rem;
   }
   .player-settings-panel {
     bottom: 5px;
     right: 5px;
     max-height: calc(100% - 10px);
     overflow-y: auto;
+  }
+}
+@container movie-player (max-width: 280px) {
+  .player-button {
+    width: 32px;
+  }
+  .player-time {
+    display: grid;
+    gap: 2px;
+    margin-inline: 2px auto;
+    font-size: 1rem;
+    text-align: center;
+  }
+  .player-time > span:first-child {
+    padding-bottom: 2px;
+    border-bottom: 1px solid #cbb7ca;
+  }
+  .player-time-divider {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
   }
 }
 @media (prefers-reduced-motion: reduce) {

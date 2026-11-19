@@ -1,15 +1,14 @@
 @font-face {
-  font-family: "DM Sans";
-  src: url("@fontsource-variable/dm-sans/files/dm-sans-latin-wght-normal.woff2") format("woff2");
-  font-style: normal;
-  font-weight: 100 1000;
+  font-family: "Caveat";
+  src: url("@fontsource/caveat/files/caveat-latin-500-normal.woff2") format("woff2");
+  font-weight: 500;
   font-display: swap;
 }
 
 @font-face {
   font-family: "Caveat";
-  src: url("@fontsource/caveat/files/caveat-latin-500-normal.woff2") format("woff2");
-  font-weight: 500;
+  src: url("@fontsource/caveat/files/caveat-latin-700-normal.woff2") format("woff2");
+  font-weight: 700;
   font-display: swap;
 }
 
@@ -19,12 +18,11 @@
   --muted: #6e526a;
   --pencil: #9d6e92;
   --focus: #75466e;
-  --sans: "DM Sans", system-ui, sans-serif;
-  --hand: "Caveat", var(--sans);
+  --hand: "Caveat", "Segoe Print", "Bradley Hand", cursive;
   --ease-entrance: cubic-bezier(0.23, 1, 0.32, 1);
   --note-dots: radial-gradient(circle, #956c811b 0.75px, transparent 1px);
   --page-content-width: min(calc(100% - clamp(26px, 7vw, 104px)), 1100px);
-  font: 1rem/1.55 var(--sans);
+  font: 500 1rem/1.55 var(--hand);
   background: #fff;
   color: var(--ink);
 }
@@ -32,7 +30,7 @@
 *, *::before, *::after { box-sizing: border-box; }
 [hidden] { display: none !important; }
 body { margin: 0; }
-button, input { font: inherit; }
+button, input, textarea, select { font: inherit; }
 button { cursor: pointer; }
 button, a, input { -webkit-tap-highlight-color: transparent; }
 :focus-visible { outline: 2px solid var(--focus); outline-offset: 4px; }
@@ -102,10 +100,10 @@ a { color: inherit; }
 .weather-shortcut-label { font: 500 1.25rem/1 var(--hand); }
 .weather-shortcut-readings { display: flex; align-items: center; gap: 12px; }
 .weather-shortcut-area { display: flex; align-items: center; gap: 3px; }
-.weather-shortcut-place { font-size: .69rem; }
-.weather-shortcut-temperature { font-size: .75rem; color: var(--ink); white-space: nowrap; }
+.weather-shortcut-place { font-size: 1rem; }
+.weather-shortcut-temperature { font-size: 1.0625rem; color: var(--ink); white-space: nowrap; }
 .weather-shortcut-icon { width: 23px; height: 23px; object-fit: contain; text-align: center; }
-.weather-shortcut-status { font-size: .75rem; }
+.weather-shortcut-status { font-size: 1.0625rem; }
 .weather-shortcut-arrow { font: 500 1.35rem/1 var(--hand); }
 
 @media (max-width: 1000px) {
@@ -197,7 +195,7 @@ a { color: inherit; }
 }
 .film-details {
   color: var(--muted);
-  font-size: .875rem;
+  font-size: 1.25rem;
   font-variant-numeric: tabular-nums;
 }
 .film-details span { color: var(--pencil); padding-inline: .35em; }
@@ -261,7 +259,7 @@ a { color: inherit; }
   background: #171217;
 }
 .movie-screen video:focus-visible { outline-offset: -4px; }
-.player-feedback { color: #95384e; font-size: .875rem; }
+.player-feedback { color: #95384e; font-size: 1.125rem; }
 .player-feedback:not(:empty) { margin-top: 10px; }
 
 .notes-shelf {
@@ -274,7 +272,7 @@ a { color: inherit; }
 }
 .notes-heading { margin-bottom: 8px; }
 .notes-heading h2 { font: 500 clamp(2.08rem, 6.3vw, 3.5rem)/1 var(--hand); }
-.notes-heading p { margin-top: 7px; color: var(--muted); font-size: .8rem; }
+.notes-heading p { margin-top: 7px; color: var(--muted); font-size: 1.125rem; }
 .notes-spread {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -534,7 +532,7 @@ a { color: inherit; }
   font: 500 1.55rem/1.22 var(--hand);
   overflow-wrap: anywhere;
 }
-.note-delete-error { color: #884454; font-size: .875rem; }
+.note-delete-error { color: #884454; font-size: 1.125rem; }
 .note-delete-error:not(:empty) { margin-top: 10px; }
 .note-delete-dialog .note-actions { margin-top: 18px; flex-wrap: wrap; }
 .note-delete-confirm { border-color: #d7aeb7; background-color: #f2dce0; color: #713346; }
@@ -571,7 +569,7 @@ a { color: inherit; }
   background: #faf2e6 var(--note-dots) 0 0 / 14px 14px;
   color: #51364e;
   box-shadow: 1px 8px 22px #342a3520;
-  font-size: .875rem;
+  font-size: 1.125rem;
   line-height: 1.4;
   opacity: 0;
   transform: translateY(8px);
@@ -665,13 +663,13 @@ a { color: inherit; }
   justify-content: space-between;
   gap: 8px;
   padding: 6px 3px 6px 0;
-  font-size: .94rem;
-  font-weight: 650;
+  font-size: 1.375rem;
+  font-weight: 700;
   line-height: 1.28;
   text-decoration: none;
 }
 .tracks a:hover span:first-child { text-decoration: underline; text-underline-offset: 3px; }
-.tracks small { display: block; color: var(--muted); font-size: .81rem; font-weight: 450; }
+.tracks small { display: block; color: var(--muted); font-size: 1.125rem; font-weight: 500; }
 .track-arrow { color: var(--muted); }
 
 .weather-board {
@@ -735,8 +733,8 @@ a { color: inherit; }
 .weather-note h2 { margin-bottom: 4px; }
 .weather-status {
   color: #554056;
-  font-size: clamp(.775rem, 2.55vw, .93rem);
-  font-weight: 650;
+  font-size: clamp(1.0625rem, 3.2vw, 1.25rem);
+  font-weight: 700;
   line-height: 1.3;
 }
 .weather-pack {
@@ -804,7 +802,7 @@ a { color: inherit; }
 .weather-period-caption {
   grid-area: caption;
   color: #50566c;
-  font-size: clamp(.65rem, 2.1vw, .75rem);
+  font-size: clamp(.9375rem, 2.6vw, 1.0625rem);
   line-height: 1.25;
 }
 .weather-period-caption time { white-space: nowrap; }
@@ -906,8 +904,8 @@ a { color: inherit; }
 }
 .weather-place {
   grid-area: place;
-  font-size: clamp(.69rem, 2.4vw, .85rem);
-  font-weight: 650;
+  font-size: clamp(1rem, 3vw, 1.25rem);
+  font-weight: 700;
   overflow-wrap: anywhere;
 }
 .weather-value {
@@ -915,7 +913,7 @@ a { color: inherit; }
   align-self: center;
   color: #463a4d;
   justify-self: end;
-  font-size: clamp(.95rem, 3.1vw, 1.24rem);
+  font-size: clamp(1.25rem, 3.8vw, 1.5rem);
   letter-spacing: -.025em;
   font-variant-numeric: tabular-nums;
   line-height: 1;
@@ -929,7 +927,7 @@ a { color: inherit; }
   gap: clamp(4px, .8vw, 9px);
   min-width: 0;
   color: #5c5365;
-  font-size: clamp(.67rem, 2.2vw, .78rem);
+  font-size: clamp(.9375rem, 2.6vw, 1.0625rem);
 }
 .weather-now .weather-reading-detail { flex-wrap: wrap; }
 .weather-condition-art {
@@ -989,7 +987,7 @@ a { color: inherit; }
   clip-path: inset(50%);
   white-space: nowrap;
 }
-.weather-source { margin-top: 7px; color: #505d6e; font-size: .68rem; }
+.weather-source { margin-top: 7px; color: #505d6e; font-size: 1rem; }
 .weather-source a { text-underline-offset: 2px; white-space: nowrap; }
 
 @supports (grid-template-rows: subgrid) {
