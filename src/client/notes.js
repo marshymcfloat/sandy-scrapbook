@@ -18,7 +18,6 @@ export function initializeNotes(root) {
     const editorSlot = form.parentElement;
     const titleInput = root.querySelector("#notes-title");
     const editor = root.querySelector("#notes-text");
-    const save = form.querySelector('button[type="submit"]');
     const toast = root.querySelector("#notes-toast");
     const status = root.querySelector("#notes-status");
     const cardTemplate = root.querySelector("#saved-note-template");
@@ -44,7 +43,6 @@ export function initializeNotes(root) {
     let finishEditorMotion;
 
     form.inert = !editorOpen;
-    save.disabled = !editor.value.trim();
     gsap.registerPlugin(CustomEase);
     const noteEase = CustomEase.create("notesEntrance", ".23, 1, .32, 1");
     const media = gsap.matchMedia();
@@ -549,11 +547,7 @@ export function initializeNotes(root) {
         closeEditor();
       }
     });
-    listen(editor, "input", () => {
-      save.disabled = !editor.value.trim();
-    });
-    listen(form, "submit", (event) => {
-      event.preventDefault();
+    function saveNote() {
       const text = editor.value;
       if (!editorOpen || !text.trim()) return;
 
@@ -568,7 +562,6 @@ export function initializeNotes(root) {
 
       const card = showNote(key, value);
       form.reset();
-      save.disabled = true;
       setEditorOpen(false, { instant: true });
       scrollToCard(card);
       card.focus({ preventScroll: true });
@@ -585,7 +578,7 @@ export function initializeNotes(root) {
         );
       }
       announce("Note saved in this browser.");
-    });
+    }
 
     listen(window, "storage", ({ storageArea, key, newValue }) => {
       if (storageArea !== storage) return;
@@ -655,6 +648,7 @@ export function initializeNotes(root) {
     updateNavigation();
     return {
       toggleEditor,
+      saveNote,
       dispose() {
         disposeLifecycle();
         notesResize.disconnect();

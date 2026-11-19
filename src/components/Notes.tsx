@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { initializeNotes } from "../client/notes";
 
 const savedNoteTemplate = `
@@ -17,10 +17,16 @@ const savedNoteTemplate = `
 export function Notes({ initialOpen = false }: { initialOpen?: boolean }) {
   const root = useRef<HTMLElement>(null);
   const controller = useRef<ReturnType<typeof initializeNotes>>(undefined);
+  const [hasNoteText, setHasNoteText] = useState(false);
+  const syncSaveState = useCallback(() => {
+    const text = root.current?.querySelector<HTMLTextAreaElement>("#notes-text")?.value ?? "";
+    setHasNoteText(Boolean(text.trim()));
+  }, []);
   const ensureNotes = useCallback(() => {
     controller.current ??= initializeNotes(root.current);
+    syncSaveState();
     return controller.current;
-  }, []);
+  }, [syncSaveState]);
   useEffect(() => {
     ensureNotes();
     return () => {
@@ -51,6 +57,11 @@ export function Notes({ initialOpen = false }: { initialOpen?: boolean }) {
                 className="note-editor note-paper"
                 id="note-editor"
                 aria-describedby="notes-storage-hint"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  ensureNotes()?.saveNote();
+                }}
+                onReset={() => setHasNoteText(false)}
               >
                 <input
                   className="note-title note-title-input"
@@ -76,13 +87,15 @@ export function Notes({ initialOpen = false }: { initialOpen?: boolean }) {
                   autoComplete="off"
                   spellCheck={false}
                   aria-label="Note text"
+                  onInput={syncSaveState}
+                  onFocus={syncSaveState}
                   required
                 ></textarea>
                 <div className="note-actions">
                   <button
                     className="note-action note-save"
                     type="submit"
-                    disabled
+                    disabled={!hasNoteText}
                   >
                     Save note
                   </button>
