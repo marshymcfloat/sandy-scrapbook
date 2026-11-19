@@ -139,14 +139,6 @@ a { color: inherit; }
 }
 .play-button:hover { background: #e5d1e8; }
 .play-button:active { transform: translateY(1px); }
-.play-icon {
-  width: 9px;
-  height: 11px;
-  flex: 0 0 auto;
-  background: currentColor;
-  clip-path: polygon(0 0, 100% 50%, 0 100%);
-}
-
 .movie-mat {
   position: relative;
   min-width: 0;
