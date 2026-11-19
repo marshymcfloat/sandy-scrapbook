@@ -16,7 +16,6 @@ import "../../web/player.css";
 
 const positionKey = "sandyfave:forrest-gump:position";
 const playbackSpeeds = [0.75, 1, 1.25, 1.5, 2];
-type SafariVideo = HTMLVideoElement & { webkitEnterFullscreen?: () => void };
 
 function savedPosition() {
   try {
@@ -40,7 +39,7 @@ function timeLabel(seconds: number) {
 export function MoviePlayer() {
   const root = useRef<HTMLElement>(null);
   const screen = useRef<HTMLDivElement>(null);
-  const movie = useRef<SafariVideo>(null);
+  const movie = useRef<HTMLVideoElement>(null);
   const settings = useRef<HTMLDivElement>(null);
   const settingsButton = useRef<HTMLButtonElement>(null);
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -64,7 +63,7 @@ export function MoviePlayer() {
   const [controlsVisible, setControlsVisible] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
-  const [supportsFullscreen, setSupportsFullscreen] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const [supportsPip, setSupportsPip] = useState(false);
   const [resumePosition, setResumePosition] = useState(0);
   const [feedback, setFeedback] = useState("");
@@ -99,19 +98,12 @@ export function MoviePlayer() {
     setReady(true);
     setResumePosition(savedPosition());
     const video = movie.current!;
-    setSupportsFullscreen(
-      !!screen.current?.requestFullscreen || !!video.webkitEnterFullscreen,
-    );
     setSupportsPip(
       !!document.pictureInPictureEnabled && !!video.requestPictureInPicture,
     );
     const updateFullscreen = () =>
       setFullscreen(document.fullscreenElement === screen.current);
-    const beginNativeFullscreen = () => setFullscreen(true);
-    const endNativeFullscreen = () => setFullscreen(false);
     document.addEventListener("fullscreenchange", updateFullscreen);
-    video.addEventListener("webkitbeginfullscreen", beginNativeFullscreen);
-    video.addEventListener("webkitendfullscreen", endNativeFullscreen);
     window.addEventListener("pagehide", savePosition);
 
     gsap.registerPlugin(CustomEase);
@@ -146,8 +138,6 @@ export function MoviePlayer() {
       if (hideTimer.current) clearTimeout(hideTimer.current);
       errorRequest.current?.abort();
       document.removeEventListener("fullscreenchange", updateFullscreen);
-      video.removeEventListener("webkitbeginfullscreen", beginNativeFullscreen);
-      video.removeEventListener("webkitendfullscreen", endNativeFullscreen);
       window.removeEventListener("pagehide", savePosition);
       media.revert();
     };
@@ -253,11 +243,14 @@ export function MoviePlayer() {
   async function toggleFullscreen() {
     try {
       if (document.fullscreenElement) await document.exitFullscreen();
+      else if (expanded) setExpanded(false);
       else if (screen.current?.requestFullscreen)
         await screen.current.requestFullscreen();
-      else movie.current?.webkitEnterFullscreen?.();
+      else setExpanded(true);
     } catch {
-      setFeedback("Fullscreen couldn’t open. Try again.");
+      if (document.fullscreenElement)
+        setFeedback("Press Escape to leave fullscreen.");
+      else setExpanded(true);
     }
     revealControls();
   }
@@ -275,6 +268,11 @@ export function MoviePlayer() {
 
   function keyboardControls(event: KeyboardEvent<HTMLDivElement>) {
     if (!active || event.altKey || event.ctrlKey || event.metaKey) return;
+    if (event.key === "Escape" && expanded && !settingsOpen) {
+      event.preventDefault();
+      setExpanded(false);
+      return;
+    }
     const target = event.target as HTMLElement;
     if (target.closest("input, select, textarea")) return;
     if (
@@ -317,10 +315,8 @@ export function MoviePlayer() {
         toggleMute();
         break;
       case "f":
-        if (supportsFullscreen) {
-          event.preventDefault();
-          void toggleFullscreen();
-        }
+        event.preventDefault();
+        void toggleFullscreen();
         break;
     }
     revealControls();
@@ -367,6 +363,7 @@ export function MoviePlayer() {
   }
 
   const shownTime = draftTime ?? currentTime;
+  const expandedPlayer = fullscreen || expanded;
   const mutedSound = muted || volume === 0;
   const startLabel = unlockAgain
     ? "Unlock again"
@@ -418,6 +415,7 @@ export function MoviePlayer() {
           aria-label="Forrest Gump movie player"
           aria-describedby="movie-shortcuts"
           tabIndex={active ? 0 : -1}
+          data-expanded={expanded ? "true" : undefined}
           data-controls-hidden={
             active && !controlsVisible && !settingsOpen && playing
               ? "true"
@@ -457,7 +455,7 @@ export function MoviePlayer() {
               revealControls();
             }}
             onDoubleClick={() => {
-              if (supportsFullscreen) void toggleFullscreen();
+              void toggleFullscreen();
             }}
             onLoadedMetadata={loadedMetadata}
             onDurationChange={(event) =>
@@ -547,7 +545,7 @@ export function MoviePlayer() {
                     aria-label="Seek movie"
                     min={0}
                     max={duration || 1}
-                  step={1}
+                    step={1}
                     value={shownTime}
                     disabled={!duration}
                     aria-valuetext={`${timeLabel(shownTime)} of ${timeLabel(duration)}`}
@@ -631,18 +629,20 @@ export function MoviePlayer() {
                   >
                     <PlayerIcon name="settings" />
                   </button>
-                  {supportsFullscreen && (
+                  {ready && (
                     <button
                       type="button"
                       className="player-button"
-                      aria-label={fullscreen ? "Exit fullscreen" : "Fullscreen"}
+                      aria-label={
+                        expandedPlayer ? "Exit fullscreen" : "Fullscreen"
+                      }
                       data-tooltip={
-                        fullscreen ? "Exit fullscreen" : "Fullscreen"
+                        expandedPlayer ? "Exit fullscreen" : "Fullscreen"
                       }
                       onClick={() => void toggleFullscreen()}
                     >
                       <PlayerIcon
-                        name={fullscreen ? "minimize" : "fullscreen"}
+                        name={expandedPlayer ? "minimize" : "fullscreen"}
                       />
                     </button>
                   )}
@@ -709,7 +709,7 @@ export function MoviePlayer() {
           <p className="player-sr-only" id="movie-shortcuts">
             Space or K plays and pauses. Left and right arrows seek ten seconds.
             Up and down arrows adjust volume. M mutes. F toggles fullscreen.
-            Escape closes settings.
+            Escape closes settings or exits fullscreen.
           </p>
           <noscript>
             <video

@@ -17,7 +17,8 @@
 .movie-screen:focus-visible {
   outline-offset: -3px;
 }
-.movie-screen:fullscreen {
+.movie-screen:fullscreen,
+.movie-screen[data-expanded="true"] {
   width: 100vw;
   height: 100dvh;
   aspect-ratio: auto;
@@ -26,6 +27,17 @@
 }
 .movie-screen::backdrop {
   background: #171217;
+}
+.movie-screen[data-expanded="true"] {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+}
+.feature:has(.movie-screen[data-expanded="true"]) {
+  z-index: 1000;
+}
+body:has(.movie-screen[data-expanded="true"]) {
+  overflow: hidden;
 }
 .movie-screen video {
   object-fit: contain;
