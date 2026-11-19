@@ -18,7 +18,15 @@ export function BirthdayNote() {
           Happy birthday, Sandy.
         </h1>
         <p className="note-paragraph" lang="fil">
-          May <cite>Forrest Gump</cite> dito if you feel like watching.
+          I’m glad I’ve gotten to know you, pati ’yung little things you enjoy.
+          I put a few of them here.
+        </p>
+        <p className="note-paragraph" lang="fil">
+          Sana maging masaya ang araw mo, with good music, something sweet,
+          and time for whatever makes you happy.
+        </p>
+        <p className="note-paragraph" lang="fil">
+          May <cite>Forrest Gump</cite> din dito kung feel mong manood.
           Walang matcha, promise.
         </p>
       </div>
