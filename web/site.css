@@ -399,7 +399,10 @@ a { color: inherit; }
   caret-color: var(--focus);
 }
 .note-title-input::placeholder { color: var(--muted); opacity: 1; }
-.note-title-input:focus-visible { outline-width: 1px; outline-offset: 3px; }
+.note-title-input:focus-visible {
+  outline: none;
+  box-shadow: 0 1px 0 var(--pencil);
+}
 .note-writing {
   --note-line-height: 2rem;
   display: block;
@@ -435,7 +438,10 @@ a { color: inherit; }
   resize: vertical;
 }
 .note-editor textarea::placeholder { color: var(--muted); opacity: 1; }
-.note-editor textarea:focus-visible { outline-width: 1px; outline-offset: 3px; }
+.note-editor textarea:focus-visible {
+  outline: none;
+  box-shadow: 0 1px 0 var(--pencil);
+}
 .saved-note {
   min-height: clamp(9rem, 12vw, 10.75rem);
 }

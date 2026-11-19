@@ -87,7 +87,7 @@ export function Notes() {
             aria-controls="note-editor"
             aria-expanded="false"
           >
-            <span aria-hidden="true">+</span> New note
+            <span aria-hidden="true">+</span> Notes to self
           </button>
           <div className="note-navigation" id="note-navigation" hidden>
             <button
