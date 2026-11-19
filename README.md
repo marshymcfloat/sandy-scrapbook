@@ -1,48 +1,87 @@
 # Sandy’s Scrapbook
 
-Private movie shelf and birthday note, served by a Cloudflare Worker.
+A private scrapbook built with Next.js App Router, React, TypeScript, and GSAP. OpenNext packages the app for Cloudflare Workers. The movie lives in the private Cloudflare R2 bucket sandyfave-media.
 
 ## Preview on this PC
 
-Use Node.js 24 and run these commands in the project folder.
+Use Node.js 24 or newer. Install dependencies in the project folder.
 
 ```powershell
 npm ci
-@'
+```
+
+Create an ignored .dev.vars file for local settings if it does not exist.
+
+```dotenv
+NEXTJS_ENV=development
 SITE_PASSPHRASE=sandy-preview
 SESSION_SECRET=local-test-session-secret-this-is-for-preview-only
-'@ | Set-Content -Encoding utf8 .dev.vars
-npm run media:local -- 'C:\Users\LENOVO\Downloads\Forrest Gump-1080P.mp4'
+```
+
+Start Next.js.
+
+```powershell
 npm run dev
 ```
 
-Open [localhost:8787](http://localhost:8787) with the preview passphrase `sandy-preview`. The movie import keeps a development copy in `.wrangler`. Import before starting the preview server.
+Open [localhost:8787](http://localhost:8787), enter sandy-preview, and click **Unlock**. Next.js reads the local Cloudflare bindings and development secrets through OpenNext. Notes and playback position are saved in the current browser.
 
-## Deploy
+The local movie import persists in .wrangler/state and is available across development-server restarts. On this PC, the movie has already been downloaded from R2 and imported. On a fresh checkout, download and import the cloud copy before starting the preview.
 
-1. Enable [R2](https://developers.cloudflare.com/r2/get-started/) in your Cloudflare account and sign in with `npm exec -- wrangler login`.
-2. Create the Standard bucket with `npm exec -- wrangler r2 bucket create sandyfave-media`. Keep public access disabled.
-3. Use [R2 API tokens](https://developers.cloudflare.com/r2/api/tokens/) to create an Object Read & Write credential scoped to `sandyfave-media`. Enter its credentials and your account ID in the ignored `.r2.vars` file.
+```powershell
+npm exec -- wrangler login
+npm exec -- wrangler r2 object get sandyfave-media/forrest-gump.mp4 --remote --file .wrangler/forrest-gump-r2-download.mp4
+npm run media:local -- .wrangler/forrest-gump-r2-download.mp4
+npm run dev
+```
 
-   ```dotenv
-   CLOUDFLARE_ACCOUNT_ID=
-   R2_ACCESS_KEY_ID=
-   R2_SECRET_ACCESS_KEY=
-   ```
+To import a different local copy, pass its absolute MP4 path to npm run media:local.
 
-   Set `R2_SESSION_TOKEN` too if using temporary credentials. Then upload the MP4.
+## Deploy to Cloudflare
+
+The production Worker sandyfave uses the existing private R2 bucket sandyfave-media and the object forrest-gump.mp4. Sandy can stream the movie through the deployed site after entering its production passphrase. Cloudflare serves the movie independently of this PC.
+
+1. Sign in with npm exec -- wrangler login.
+2. Ensure SITE_PASSPHRASE and SESSION_SECRET are configured as secrets on the sandyfave Worker. Existing production secrets are reused on deployment. SESSION_SECRET must contain at least 32 characters.
+3. Build and deploy the Next.js app with OpenNext.
 
    ```powershell
-   npm run media:upload -- 'C:\Users\LENOVO\Downloads\Forrest Gump-1080P.mp4'
+   npm run deploy
    ```
 
-4. In the ignored `.production.json` file, set `SITE_PASSPHRASE` to the unique phrase Sandy will enter and `SESSION_SECRET` to a separate random key. Generate the key locally with `node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"`. The file is a JSON object with the two names as keys and both values as strings.
+   For a first deployment, an ignored .production.json file may supply the two secrets as string values.
 
    ```powershell
    npm run deploy -- --secrets-file .production.json
    ```
 
-5. Open the resulting `workers.dev` URL in a fresh browser. Confirm that the passphrase unlocks the page and the direct movie URL requires a session. Test playback, sound, seeking, fullscreen, and resume on both desktop and a phone on cellular data. Share the URL and passphrase with Sandy on November 20.
+4. Open [the deployed scrapbook](https://sandyfave.sandyfave.workers.dev/) in a fresh browser, unlock it with the production passphrase, and test playback, sound, seeking, fullscreen, and resume before sharing it.
+
+To test the built Worker locally, stop the development server and run npm run preview. This builds with OpenNext and serves the app on port 8787 using the local Cloudflare bindings.
+
+## Vercel deployment
+
+The same Next.js project can also run on Vercel. Set the server environment variable `CLOUDFLARE_BACKEND_URL` to `https://sandyfave.sandyfave.workers.dev` and deploy the GitHub repository with the Next.js preset.
+
+Vercel renders the scrapbook pages and forwards unlock, lock, session validation, weather, and movie requests to Cloudflare. The movie continues to stream from the private R2 bucket, and both sites accept the Cloudflare production passphrase. Notes and playback position are saved separately for each site's browser origin.
+
+## Upload a replacement movie
+
+Store R2 S3 credentials in the ignored .r2.vars file.
+
+```dotenv
+CLOUDFLARE_ACCOUNT_ID=
+R2_ACCESS_KEY_ID=
+R2_SECRET_ACCESS_KEY=
+```
+
+Set R2_SESSION_TOKEN too when using temporary credentials, then upload the replacement.
+
+```powershell
+npm run media:upload -- 'C:\path\to\your-movie.mp4'
+```
+
+The upload uses the object name forrest-gump.mp4. The R2 bucket stays private and the Worker checks the session before serving it.
 
 ## Checks
 
@@ -50,12 +89,24 @@ Open [localhost:8787](http://localhost:8787) with the preview passphrase `sandy-
 npm run check
 npm test
 npm run build
+npm exec -- opennextjs-cloudflare build
 npm exec -- wrangler deploy --dry-run
 ```
 
+The route tests use isolated Cloudflare bindings to exercise authentication, rate limiting, locking, and movie byte ranges. Unlock failures redirect to the cover with feedback so reloading the page does not resubmit the passphrase.
+
+## Project structure
+
+- src/app contains the page, layout, and unlock, lock, movie, and weather route handlers.
+- src/components contains the React notebook, artwork, player, weather, and notes components.
+- src/client contains the existing browser interaction logic, scoped to component refs with cleanup on unmount.
+- src/auth.ts, src/movie.ts, and src/weather.ts contain the shared server logic.
+- web contains the existing notebook styles.
+- public/assets contains the artwork served by Next.js.
+
 ## Artwork
 
-The built-in ImageGen tool created the still used in `web/art/bench.webp` and its smaller exports.
+The built-in ImageGen tool created the still used in `public/assets/bench.webp` and its smaller exports.
 
 <details>
 <summary>Image prompt</summary>
@@ -64,7 +115,7 @@ Create one original photorealistic cinematic landscape still for a personal birt
 
 </details>
 
-The built-in ImageGen tool created the open notebook in `web/art/notebook-spread.webp` and the phone version in `web/art/notebook-page.webp`.
+The built-in ImageGen tool created the open notebook in `public/assets/notebook-spread.webp` and the phone version in `public/assets/notebook-page.webp`.
 
 <details>
 <summary>Notebook spread prompt</summary>
@@ -80,7 +131,7 @@ Create one original photorealistic cutout product photograph of a single visible
 
 </details>
 
-The built-in ImageGen tool created the passphrase page illustration in `web/art/journal-sketch.webp`.
+The built-in ImageGen tool created the passphrase page illustration in `public/assets/journal-sketch.webp`.
 
 <details>
 <summary>Notebook illustration prompt</summary>

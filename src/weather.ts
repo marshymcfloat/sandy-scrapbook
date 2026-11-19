@@ -196,12 +196,12 @@ export async function weatherResponse(showPanels = false) {
 
   try {
     const response = await fetch(`https://api.open-meteo.com/v1/forecast?${parameters}`, {
-      cf: { cacheEverything: true, cacheTtlByStatus: { "200": 300 } },
+      next: { revalidate: 300 },
       signal: AbortSignal.timeout(7000),
     });
     if (!response.ok) throw new Error(`Open-Meteo returned ${response.status}`);
 
-    const forecasts = await response.json<OpenMeteoForecast[]>();
+    const forecasts: OpenMeteoForecast[] = await response.json();
     if (!Array.isArray(forecasts) || forecasts.length !== places.length) {
       throw new Error("Unexpected forecast response");
     }

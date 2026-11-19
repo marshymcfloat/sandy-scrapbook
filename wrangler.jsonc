@@ -1,16 +1,20 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "sandyfave",
-  "main": "src/worker.ts",
+  "main": ".open-next/worker.js",
   "compatibility_date": "2026-01-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   "workers_dev": true,
   "preview_urls": false,
   "assets": {
-    "directory": "./dist",
+    "directory": ".open-next/assets",
     "binding": "ASSETS",
     "run_worker_first": true,
     "html_handling": "none"
   },
+  "services": [
+    { "binding": "WORKER_SELF_REFERENCE", "service": "sandyfave" }
+  ],
   "r2_buckets": [
     { "binding": "MEDIA", "bucket_name": "sandyfave-media" }
   ],

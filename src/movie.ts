@@ -1,4 +1,5 @@
 import { privateHeaders, textResponse } from "./responses";
+import type { R2Bucket } from "@cloudflare/workers-types";
 
 const MOVIE_KEY = "forrest-gump.mp4";
 const OPEN_RANGE_BYTES = 8 * 1024 * 1024;
@@ -23,7 +24,7 @@ function parseByteRange(header: string | null, size: number): ByteRange | "unsat
   return offset <= end ? { offset, length: end - offset + 1 } : "unsatisfiable";
 }
 
-export async function serveMovie(request: Request, bucket: R2Bucket, context: ExecutionContext): Promise<Response> {
+export async function serveMovie(request: Request, bucket: R2Bucket): Promise<Response> {
   try {
     const metadata = await bucket.head(MOVIE_KEY);
     if (!metadata?.size) return textResponse("The movie is temporarily unavailable.", 503);
@@ -58,10 +59,11 @@ export async function serveMovie(request: Request, bucket: R2Bucket, context: Ex
     if (range) {
       headers.set("Content-Range", `bytes ${range.offset}-${range.offset + range.length - 1}/${metadata.size}`);
     }
-    const stream = new FixedLengthStream(range?.length ?? metadata.size);
-    context.waitUntil(movie.body.pipeTo(stream.writable).catch(() => undefined));
-
-    return new Response(stream.readable, { status: range ? 206 : 200, headers, encodeBody: "manual" });
+    headers.set("Content-Length", String(range?.length ?? metadata.size));
+    return new Response(movie.body as unknown as ReadableStream<Uint8Array>, {
+      status: range ? 206 : 200,
+      headers,
+    });
   } catch (error) {
     console.error("Could not read the movie from storage", error);
     return textResponse("The movie is temporarily unavailable.", 503);

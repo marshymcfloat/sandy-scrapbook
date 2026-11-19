@@ -1,7 +1,13 @@
 node_modules/
 dist/
+.next/
+.open-next/
+.vercel/
+*.tsbuildinfo
+next-env.d.ts
 .wrangler/
 .dev.vars*
+.env*
 .r2.vars*
 .production.json
 .playwright-cli/

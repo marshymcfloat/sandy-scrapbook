@@ -4,11 +4,13 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "node scripts/build.mjs",
-    "check": "tsc --noEmit",
-    "dev": "npm run build && wrangler dev --port 8787",
-    "deploy": "npm run build && wrangler deploy",
+    "dev": "next dev --port 8787",
+    "build": "next build",
+    "start": "next start --port 8787",
+    "check": "next typegen && tsc --noEmit",
     "test": "node --test",
+    "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview --port 8787",
+    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
     "media:local": "node scripts/media-local.mjs",
     "media:upload": "node --env-file-if-exists=.r2.vars scripts/media-upload.mjs"
   },
@@ -18,11 +20,18 @@
     "@fontsource-variable/dm-sans": "^5.3.0",
     "@fontsource/caveat": "^5.3.0",
     "@fontsource/instrument-serif": "^5.3.0",
+    "@opennextjs/cloudflare": "^1.20.17",
     "esbuild": "^0.28.2",
-    "gsap": "^3.15.1"
+    "gsap": "^3.15.1",
+    "next": "^16.4.6",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20261116.1",
+    "@types/node": "^26.6.6",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
     "miniflare": "5.20261113.0-beta",
     "typescript": "^7.0.2",
     "wrangler": "^4.162.0"

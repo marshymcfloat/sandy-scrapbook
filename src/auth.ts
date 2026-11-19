@@ -1,3 +1,5 @@
+import { timingSafeEqual } from "node:crypto";
+
 export interface Secrets {
   SITE_PASSPHRASE: string;
   SESSION_SECRET: string;
@@ -40,7 +42,7 @@ export async function matchesPassphrase(candidate: string, expected: string): Pr
     crypto.subtle.digest("SHA-256", encoder.encode(candidate)),
     crypto.subtle.digest("SHA-256", encoder.encode(expected.trim())),
   ]);
-  return crypto.subtle.timingSafeEqual(enteredHash, expectedHash);
+  return timingSafeEqual(new Uint8Array(enteredHash), new Uint8Array(expectedHash));
 }
 
 function signingKey(secrets: Secrets) {
