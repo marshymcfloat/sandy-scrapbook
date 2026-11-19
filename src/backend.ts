@@ -47,8 +47,26 @@ export async function forwardToCloudflare(
     const response = await fetch(upstream, options);
     const outgoing = new Headers(response.headers);
     // fetch decodes compressed responses before exposing the stream.
+    const encoding = outgoing.get("Content-Encoding");
     outgoing.delete("Content-Encoding");
-    outgoing.delete("Content-Length");
+    outgoing.delete("Transfer-Encoding");
+    if (incoming.pathname !== "/movie.mp4" || (encoding && encoding.toLowerCase() !== "identity")) {
+      outgoing.delete("Content-Length");
+    } else if (response.status === 206) {
+      // The Worker can stream the requested bytes without a Content-Length header.
+      const range = outgoing.get("Content-Range")?.match(/^bytes (\d+)-(\d+)\/\d+$/i);
+      if (range) {
+        const start = Number(range[1]);
+        const end = Number(range[2]);
+        const length = end - start + 1;
+        if (
+          Number.isSafeInteger(start) && Number.isSafeInteger(end) &&
+          Number.isSafeInteger(length) && length > 0
+        ) {
+          outgoing.set("Content-Length", String(length));
+        }
+      }
+    }
     for (const [name, value] of Object.entries(privateHeaders))
       outgoing.set(name, value);
     const location = outgoing.get("Location");

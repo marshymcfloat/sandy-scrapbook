@@ -254,9 +254,18 @@ test("Vercel forwards the scrapbook cookie and byte ranges and keeps redirects o
         "__Host-sandyfave=test-session",
       );
       assert.equal(options.headers.get("Range"), "bytes=3-5");
-      return new Response(fixture.slice(3, 6), {
+      const body = new ReadableStream({
+        start(controller) {
+          controller.enqueue(fixture.slice(3, 6));
+          controller.close();
+        },
+      });
+      return new Response(body, {
         status: 206,
-        headers: { "Content-Range": "bytes 3-5/16" },
+        headers: {
+          "Content-Range": "bytes 3-5/16",
+          "Transfer-Encoding": "chunked",
+        },
       });
     };
     const movie = await request("/movie.mp4", {
@@ -266,6 +275,8 @@ test("Vercel forwards the scrapbook cookie and byte ranges and keeps redirects o
       },
     });
     assert.equal(movie.status, 206);
+    assert.equal(movie.headers.get("Content-Length"), "3");
+    assert.equal(movie.headers.get("Transfer-Encoding"), null);
     assert.deepEqual(
       new Uint8Array(await movie.arrayBuffer()),
       fixture.slice(3, 6),
