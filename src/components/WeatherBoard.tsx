@@ -12,6 +12,7 @@ export function WeatherBoard({ initialPanels }: { initialPanels: string }) {
       className="weather-board"
       id="weather"
       aria-labelledby="weather-title"
+      tabIndex={-1}
     >
       <div className="weather-deck">
         <div className="weather-note">

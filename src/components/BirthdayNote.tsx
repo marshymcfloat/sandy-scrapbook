@@ -1,0 +1,27 @@
+import { Sparkles } from "./Artwork";
+
+export function BirthdayNote() {
+  return (
+    <section className="birthday-greeting" aria-labelledby="birthday-title">
+      <div className="birthday-note note-paper">
+        <svg
+          className="note-sparkles"
+          width="54"
+          height="50"
+          viewBox="0 0 54 50"
+          aria-hidden="true"
+          focusable="false"
+        >
+          <Sparkles />
+        </svg>
+        <h1 className="note-title" id="birthday-title">
+          Happy birthday, Sandy.
+        </h1>
+        <p className="note-paragraph" lang="fil">
+          May <cite>Forrest Gump</cite> dito if you feel like watching.
+          Walang matcha, promise.
+        </p>
+      </div>
+    </section>
+  );
+}

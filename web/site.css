@@ -22,6 +22,7 @@
   --sans: "DM Sans", system-ui, sans-serif;
   --hand: "Caveat", var(--sans);
   --ease-entrance: cubic-bezier(0.23, 1, 0.32, 1);
+  --note-dots: radial-gradient(circle, #956c811b 0.75px, transparent 1px);
   --page-content-width: min(calc(100% - clamp(26px, 7vw, 104px)), 1100px);
   font: 1rem/1.55 var(--sans);
   background: #fff;
@@ -50,14 +51,22 @@ a { color: inherit; }
 .scrapbook > section { grid-column: content; }
 .scrapbook > .notes-shelf { grid-column: 1 / -1; }
 
+.masthead-shell {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: #fffffff5;
+  backdrop-filter: blur(12px);
+}
 .masthead {
   min-height: 65px;
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  justify-content: space-between;
   gap: 12px;
   border-bottom: 1px solid #ebdfe8;
 }
+.masthead form { justify-self: end; }
 
 .wordmark { font: 500 clamp(1.5rem, 4.6vw, 2.15rem)/1 var(--hand); }
 .wordmark em { color: var(--muted); font-style: normal; }
@@ -73,6 +82,76 @@ a { color: inherit; }
   font: 500 clamp(1.125rem, 4vw, 1.25rem)/1 var(--hand);
 }
 .lock-button:hover { text-decoration: underline; text-underline-offset: 4px; }
+
+.weather-shortcut {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  max-width: 100%;
+  padding: 4px 11px;
+  border: 1px solid #dfd1df;
+  border-radius: 5px 8px 4px 7px;
+  background: #f7f1f7;
+  color: var(--muted);
+  text-decoration: none;
+  transition: opacity 180ms var(--ease-entrance), visibility 180ms, background-color 180ms;
+}
+.weather-shortcut:hover { background: #f0e5f2; }
+.weather-shortcut[data-full-visible] { opacity: 0; visibility: hidden; pointer-events: none; }
+.weather-shortcut-label { font: 500 1.25rem/1 var(--hand); }
+.weather-shortcut-readings { display: flex; align-items: center; gap: 12px; }
+.weather-shortcut-area { display: flex; align-items: center; gap: 3px; }
+.weather-shortcut-place { font-size: .69rem; }
+.weather-shortcut-temperature { font-size: .75rem; color: var(--ink); white-space: nowrap; }
+.weather-shortcut-icon { width: 23px; height: 23px; object-fit: contain; text-align: center; }
+.weather-shortcut-status { font-size: .75rem; }
+.weather-shortcut-arrow { font: 500 1.35rem/1 var(--hand); }
+
+@media (max-width: 1000px) {
+  .masthead {
+    grid-template-columns: minmax(0, 1fr) auto;
+    row-gap: 0;
+    padding-block: 10px;
+  }
+  .weather-shortcut {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    justify-self: center;
+    margin-top: 7px;
+  }
+  .masthead form { grid-column: 2; grid-row: 1; }
+}
+@media (max-width: 620px) {
+  .weather-shortcut { width: 100%; min-height: 50px; justify-content: center; gap: 8px; }
+  .weather-shortcut[data-state="ready"] .weather-shortcut-label { display: none; }
+  .weather-shortcut[data-state="ready"] .weather-shortcut-readings {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: 100%;
+    gap: 8px;
+  }
+  .weather-shortcut-area { display: grid; grid-template-columns: auto auto; justify-content: center; gap: 0 4px; }
+  .weather-shortcut-place { grid-column: 1 / -1; text-align: center; }
+  .weather-shortcut-icon { justify-self: end; }
+  .weather-shortcut-temperature { align-self: center; }
+}
+
+.birthday-greeting {
+  width: min(100%, 620px);
+  margin: clamp(40px, 6vw, 66px) auto clamp(15px, 2vw, 26px);
+}
+.birthday-greeting .note-paper {
+  width: 100%;
+  padding: clamp(24px, 4vw, 36px);
+  animation: birthday-arrive 650ms var(--ease-entrance) both;
+}
+.birthday-greeting .note-title { font-size: clamp(2.25rem, 6vw, 3.25rem); }
+.birthday-greeting .note-paragraph { max-width: 36ch; margin-top: 12px; }
+@keyframes birthday-arrive {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 
 .feature {
   position: relative;
@@ -100,7 +179,7 @@ a { color: inherit; }
 }
 
 .feature-info { min-width: 0; }
-.feature h1 {
+.feature h2 {
   font: 500 clamp(2.85rem, 14.8vw, 5.15rem)/.9 var(--hand);
   letter-spacing: -.035em;
 }
@@ -189,18 +268,20 @@ a { color: inherit; }
   --note-width: clamp(310px, 34vw, 432px);
   --note-rail-inset: 10px;
   --note-gap: clamp(14px, 2vw, 22px);
-  --note-dots: radial-gradient(circle, #956c811b 0.75px, transparent 1px);
   min-width: 0;
-  padding-inline: clamp(14px, 3vw, 60px);
+  padding-inline: 0;
   margin-top: clamp(19px, 4.6vw, 57px);
 }
+.notes-heading { margin-bottom: 8px; }
+.notes-heading h2 { font: 500 clamp(2.08rem, 6.3vw, 3.5rem)/1 var(--hand); }
+.notes-heading p { margin-top: 7px; color: var(--muted); font-size: .8rem; }
 .notes-spread {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   column-gap: clamp(8px, 1.4vw, 18px);
   width: fit-content;
-  max-width: 100%;
+  max-width: calc(100% - clamp(28px, 6vw, 120px));
   margin-inline: auto;
 }
 .notes-viewport {
@@ -303,9 +384,9 @@ a { color: inherit; }
 }
 .note-editor-slot[data-folding] { overflow: clip; overflow-clip-margin: 14px; }
 .note-editor, .saved-note { margin-inline-start: var(--note-gap); }
-.birthday-note[hidden] + .note-editor-slot { width: var(--note-width); }
-.birthday-note[hidden] + .note-editor-slot .note-editor,
-.birthday-note[hidden] + .saved-note { margin-inline-start: 0; }
+.note-editor-slot:first-child { width: var(--note-width); }
+.note-editor-slot:first-child .note-editor,
+.saved-note:first-child { margin-inline-start: 0; }
 .note-editor, .saved-note { background-color: #fcf3de; }
 .note-editor { padding-block: clamp(14px, 1.65vw, 19px) 9px; }
 .note-title-input {
@@ -358,7 +439,7 @@ a { color: inherit; }
 .note-editor textarea::placeholder { color: var(--muted); opacity: 1; }
 .note-editor textarea:focus-visible { outline-width: 1px; outline-offset: 3px; }
 .saved-note {
-  min-height: var(--birthday-note-height, clamp(9rem, 12vw, 10.75rem));
+  min-height: clamp(9rem, 12vw, 10.75rem);
 }
 .saved-note-text {
   max-height: 8lh;
@@ -510,6 +591,7 @@ a { color: inherit; }
   .notes-spread {
     grid-template-columns: minmax(0, 1fr);
     width: 100%;
+    max-width: 100%;
   }
   .note-controls {
     display: flex;
@@ -597,7 +679,8 @@ a { color: inherit; }
   --weather-inset: clamp(9px, 1.2vw, 16px);
   --weather-rule: #67597431;
   width: min(100%, 470px);
-  margin: clamp(14px, 2vw, 24px) auto 0;
+  margin: clamp(48px, 6.8vw, 82px) auto 0;
+  scroll-margin-top: var(--weather-scroll-offset, 145px);
 }
 .weather-deck, .weather-periods {
   display: grid;
@@ -981,7 +1064,7 @@ a { color: inherit; }
     aspect-ratio: 1320 / 730;
     padding: 5.8% 6.2% 6% 8.4%;
   }
-  .feature h1 { font-size: clamp(4.85rem, 8.6vw, 7.35rem); }
+  .feature h2 { font-size: clamp(4.85rem, 8.6vw, 7.35rem); }
   .desktop-break { display: initial; }
   .film-pencil-stroke { margin-bottom: 17px; }
   .play-button { margin-top: 20px; }
@@ -1002,5 +1085,6 @@ a { color: inherit; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; }
   .notes-rail { scroll-behavior: auto; }
+  .birthday-greeting .note-paper { animation: none; }
   .note-delete-dialog::backdrop { transition: none; }
 }

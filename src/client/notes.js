@@ -10,7 +10,6 @@ export function initializeNotes(root) {
   if (rail) {
     const viewport = rail.parentElement;
     const spread = viewport.parentElement;
-    const birthdayNote = rail.querySelector(".birthday-note");
     const controls = root.querySelector("#note-controls");
     const navigation = root.querySelector("#note-navigation");
     const [previous, next] = navigation.querySelectorAll("button");
@@ -29,7 +28,6 @@ export function initializeNotes(root) {
     const originalKey = "sandyfave:notes-to-self";
     const cardPrefix = `${originalKey}:card:`;
     const entryPrefix = `${originalKey}:entry:`;
-    const birthdayDismissedKey = `${originalKey}:birthday-dismissed`;
     const cards = new Map();
     const scrollThumbTimers = new WeakMap();
     let storage;
@@ -104,7 +102,7 @@ export function initializeNotes(root) {
     }
 
     function updateNavigation() {
-      viewport.hidden = birthdayNote.hidden && !cards.size && editorSlot.hidden;
+      viewport.hidden = !cards.size && editorSlot.hidden;
       const end = rail.scrollWidth - rail.clientWidth;
       const scrollable = end > 1;
       const hasPrevious = rail.scrollLeft > 1;
@@ -476,11 +474,9 @@ export function initializeNotes(root) {
     function confirmDelete() {
       if (!deleteDialog.open || finishDialogClose || !pendingDelete) return;
       const { key, card } = pendingDelete;
-      const isBirthday = key === birthdayDismissedKey;
 
       try {
-        if (isBirthday) localStorage.setItem(birthdayDismissedKey, "1");
-        else localStorage.removeItem(key);
+        localStorage.removeItem(key);
       } catch {
         deleteError.textContent = "Couldn’t delete this note. Try again.";
         return;
@@ -489,14 +485,13 @@ export function initializeNotes(root) {
       pendingDelete = undefined;
       closeDeleteDialog(() => {
         const visibleCards = [
-          ...rail.querySelectorAll(".birthday-note:not([hidden]), .saved-note"),
+          ...rail.querySelectorAll(".saved-note"),
         ];
         const index = visibleCards.indexOf(card);
         const neighbor = visibleCards[index + 1] ?? visibleCards[index - 1];
         reflowAfterDeletion(() => {
-          if (isBirthday) birthdayNote.hidden = true;
-          else removeCard(key);
-          matchCardHeights();
+          removeCard(key);
+          updateNavigation();
           if (neighbor) {
             scrollToCard(neighbor);
             neighbor.focus({ preventScroll: true });
@@ -514,7 +509,7 @@ export function initializeNotes(root) {
       if (!card) {
         card = cardTemplate.content.firstElementChild.cloneNode(true);
         enableDelete(key, card);
-        if (key === originalKey) birthdayNote.after(card);
+        if (key === originalKey) rail.prepend(card);
         else editorSlot.before(card);
         cards.set(key, card);
       }
@@ -525,7 +520,6 @@ export function initializeNotes(root) {
 
     try {
       storage = localStorage;
-      birthdayNote.hidden = storage.getItem(birthdayDismissedKey) === "1";
       for (const key of Object.keys(storage).filter(isNoteKey).sort()) {
         const text = storage.getItem(key);
         if (text) showNote(key, text);
@@ -592,11 +586,8 @@ export function initializeNotes(root) {
     listen(window, "storage", ({ storageArea, key, newValue }) => {
       if (storageArea !== storage) return;
       if (key === null) {
-        birthdayNote.hidden = false;
         for (const card of cards.values()) card.remove();
         cards.clear();
-      } else if (key === birthdayDismissedKey) {
-        birthdayNote.hidden = newValue === "1";
       } else if (isNoteKey(key)) {
         if (newValue) showNote(key, newValue);
         else removeCard(key);
@@ -608,10 +599,9 @@ export function initializeNotes(root) {
         (pendingDelete.card.hidden || !pendingDelete.card.isConnected)
       )
         closeDeleteDialog();
-      matchCardHeights();
+      updateNavigation();
     });
 
-    enableDelete(birthdayDismissedKey, birthdayNote);
     listen(root.querySelector("#cancel-note-delete"), "click", () =>
       closeDeleteDialog(),
     );
@@ -656,21 +646,10 @@ export function initializeNotes(root) {
       },
       { capture: true },
     );
-    function matchCardHeights() {
-      if (birthdayNote.hidden)
-        rail.style.removeProperty("--birthday-note-height");
-      else
-        rail.style.setProperty(
-          "--birthday-note-height",
-          `${birthdayNote.getBoundingClientRect().height}px`,
-        );
-      updateNavigation();
-    }
-    const notesResize = new ResizeObserver(matchCardHeights);
+    const notesResize = new ResizeObserver(updateNavigation);
     notesResize.observe(rail);
-    notesResize.observe(birthdayNote);
     controls.hidden = false;
-    matchCardHeights();
+    updateNavigation();
     return () => {
       dispose();
       notesResize.disconnect();
@@ -685,7 +664,6 @@ export function initializeNotes(root) {
         ...cards.values(),
       ]);
       for (const card of cards.values()) card.remove();
-      birthdayNote.hidden = false;
       controls.hidden = true;
       if (deleteDialog.open) deleteDialog.close();
     };

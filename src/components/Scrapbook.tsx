@@ -1,25 +1,29 @@
 import { weatherPanels } from "../weather";
+import { BirthdayNote } from "./BirthdayNote";
 import { MoviePlayer } from "./MoviePlayer";
 import { Notes } from "./Notes";
 import { WeatherBoard } from "./WeatherBoard";
+import { WeatherShortcut } from "./WeatherShortcut";
 
 export function Scrapbook() {
   return (
     <>
-      <header className="masthead wrap">
-        <div className="wordmark">
-          Sandy’s <em>Scrapbook</em>
-        </div>
-        <form action="/lock" method="post">
-          <button className="lock-button" type="submit">
-            Lock shelf
-          </button>
-        </form>
-      </header>
+      <div className="masthead-shell">
+        <header className="masthead wrap">
+          <div className="wordmark">
+            Sandy’s <em>Scrapbook</em>
+          </div>
+          <WeatherShortcut />
+          <form action="/lock" method="post">
+            <button className="lock-button" type="submit">
+              Close scrapbook
+            </button>
+          </form>
+        </header>
+      </div>
       <main className="scrapbook">
-        <WeatherBoard initialPanels={weatherPanels()} />
+        <BirthdayNote />
         <MoviePlayer />
-        <Notes />
         <section className="favorites" aria-labelledby="favorites-title">
           <h2 id="favorites-title">A few things from our chats</h2>
           <div className="shelf">
@@ -90,6 +94,8 @@ export function Scrapbook() {
             </section>
           </div>
         </section>
+        <WeatherBoard initialPanels={weatherPanels()} />
+        <Notes />
       </main>
     </>
   );

@@ -383,10 +383,10 @@ export function MoviePlayer() {
         <NotebookPaper />
       </picture>
       <div className="feature-info">
-        <h1 id="film-title">
+        <h2 id="film-title">
           Forrest <br className="desktop-break" />
           Gump
-        </h1>
+        </h2>
         <span className="film-pencil-stroke" aria-hidden="true"></span>
         <p className="film-details">
           1994 <span aria-hidden="true">·</span> 2h 22m
