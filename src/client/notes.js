@@ -1,16 +1,16 @@
 import { gsap } from "gsap";
+import { CustomEase } from "gsap/CustomEase";
 import { createLifecycle } from "./lifecycle";
 
 export function initializeNotes(root) {
   if (!root) return;
-  const { listen, schedule, dispose } = createLifecycle();
+  const { listen, schedule, dispose: disposeLifecycle } = createLifecycle();
 
   const rail = root.querySelector("#notes-rail");
 
   if (rail) {
     const viewport = rail.parentElement;
     const spread = viewport.parentElement;
-    const controls = root.querySelector("#note-controls");
     const navigation = root.querySelector("#note-navigation");
     const [previous, next] = navigation.querySelectorAll("button");
     const newNote = root.querySelector("#new-note");
@@ -39,10 +39,14 @@ export function initializeNotes(root) {
     let suppressDragClick = false;
     let railSnap;
     let cardReflow;
-    let editorOpen = false;
+    let editorOpen = !editorSlot.hidden;
     let allowNoteMotion = false;
     let finishEditorMotion;
 
+    form.inert = !editorOpen;
+    save.disabled = !editor.value.trim();
+    gsap.registerPlugin(CustomEase);
+    const noteEase = CustomEase.create("notesEntrance", ".23, 1, .32, 1");
     const media = gsap.matchMedia();
     media.add("(prefers-reduced-motion: no-preference)", () => {
       allowNoteMotion = true;
@@ -249,7 +253,7 @@ export function initializeNotes(root) {
       railSnap = gsap.to(rail, {
         scrollLeft: left,
         duration: 0.38,
-        ease: "shelfEntrance",
+        ease: noteEase,
         onComplete() {
           railSnap = undefined;
           rail.removeAttribute("data-settling");
@@ -303,7 +307,7 @@ export function initializeNotes(root) {
 
       const timing = {
         duration: open ? 0.32 : 0.2,
-        ease: open ? "shelfEntrance" : "power2.inOut",
+        ease: open ? noteEase : "power2.inOut",
       };
       // Resize the slot only if all cards fit. A scrollable row needs its full width for native scrolling.
       if (
@@ -390,7 +394,7 @@ export function initializeNotes(root) {
         return;
       }
       cardReflow = gsap.timeline({
-        defaults: { duration: 0.38, ease: "shelfEntrance" },
+        defaults: { duration: 0.38, ease: noteEase },
         onComplete: finish,
       });
       if (resize) cardReflow.to(spread, { width, clearProps: "width" }, 0);
@@ -417,7 +421,7 @@ export function initializeNotes(root) {
             y: 0,
             scale: 1,
             duration: 0.24,
-            ease: "shelfEntrance",
+            ease: noteEase,
             clearProps: "opacity,transform",
           },
         );
@@ -441,7 +445,7 @@ export function initializeNotes(root) {
           y: 6,
           scale: 0.985,
           duration: 0.18,
-          ease: "shelfEntrance",
+          ease: noteEase,
           onComplete: finishDialogClose,
         });
       } else {
@@ -528,7 +532,7 @@ export function initializeNotes(root) {
       announce("Saving is unavailable in this browser.", true);
     }
 
-    listen(newNote, "click", () => {
+    function toggleEditor() {
       if (editorOpen) {
         closeEditor();
         return;
@@ -537,7 +541,7 @@ export function initializeNotes(root) {
       setEditorOpen(true);
       if (!editorSlot.hasAttribute("data-folding")) scrollToCard(form);
       titleInput.focus({ preventScroll: true });
-    });
+    }
     listen(root.querySelector("#close-note"), "click", closeEditor);
     listen(form, "keydown", (event) => {
       if (event.key === "Escape" && !event.isComposing) {
@@ -575,7 +579,7 @@ export function initializeNotes(root) {
           {
             opacity: 1,
             duration: 0.24,
-            ease: "shelfEntrance",
+            ease: noteEase,
             clearProps: "opacity",
           },
         );
@@ -648,24 +652,25 @@ export function initializeNotes(root) {
     );
     const notesResize = new ResizeObserver(updateNavigation);
     notesResize.observe(rail);
-    controls.hidden = false;
     updateNavigation();
-    return () => {
-      dispose();
-      notesResize.disconnect();
-      media.revert();
-      stopRailSnap();
-      finishCardReflow();
-      gsap.killTweensOf([
-        editorSlot,
-        form,
-        deleteDialog,
-        spread,
-        ...cards.values(),
-      ]);
-      for (const card of cards.values()) card.remove();
-      controls.hidden = true;
-      if (deleteDialog.open) deleteDialog.close();
+    return {
+      toggleEditor,
+      dispose() {
+        disposeLifecycle();
+        notesResize.disconnect();
+        media.revert();
+        stopRailSnap();
+        finishCardReflow();
+        gsap.killTweensOf([
+          editorSlot,
+          form,
+          deleteDialog,
+          spread,
+          ...cards.values(),
+        ]);
+        for (const card of cards.values()) card.remove();
+        if (deleteDialog.open) deleteDialog.close();
+      },
     };
   }
 }

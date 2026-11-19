@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { initializeNotes } from "../client/notes";
 
 const savedNoteTemplate = `
@@ -14,9 +14,20 @@ const savedNoteTemplate = `
     </button>
   </article>`;
 
-export function Notes() {
+export function Notes({ initialOpen = false }: { initialOpen?: boolean }) {
   const root = useRef<HTMLElement>(null);
-  useEffect(() => initializeNotes(root.current), []);
+  const controller = useRef<ReturnType<typeof initializeNotes>>(undefined);
+  const ensureNotes = useCallback(() => {
+    controller.current ??= initializeNotes(root.current);
+    return controller.current;
+  }, []);
+  useEffect(() => {
+    ensureNotes();
+    return () => {
+      controller.current?.dispose();
+      controller.current = undefined;
+    };
+  }, [ensureNotes]);
   return (
     <section
       ref={root}
@@ -28,14 +39,14 @@ export function Notes() {
         <p id="notes-storage-hint">Saved only in this browser.</p>
       </div>
       <div className="notes-spread">
-        <div className="notes-viewport">
+        <div className="notes-viewport" hidden={!initialOpen}>
           <div
             className="notes-rail"
             id="notes-rail"
             role="group"
             aria-label="Notes to self"
           >
-            <div className="note-editor-slot" hidden>
+            <div className="note-editor-slot" hidden={!initialOpen}>
               <form
                 className="note-editor note-paper"
                 id="note-editor"
@@ -49,6 +60,7 @@ export function Notes() {
                   aria-label="Title (optional)"
                   maxLength={120}
                   autoComplete="off"
+                  autoFocus={initialOpen}
                 />
                 <button
                   className="note-action note-close"
@@ -79,13 +91,23 @@ export function Notes() {
             </div>
           </div>
         </div>
-        <div className="note-controls" id="note-controls" hidden>
+        <form
+          className="note-controls"
+          id="note-controls"
+          action="/#notes-title-heading"
+          method="get"
+          onSubmit={(event) => {
+            event.preventDefault();
+            ensureNotes()?.toggleEditor();
+          }}
+        >
+          <input type="hidden" name="note" value="new" />
           <button
             className="note-action note-new"
             id="new-note"
-            type="button"
+            type="submit"
             aria-controls="note-editor"
-            aria-expanded="false"
+            aria-expanded={initialOpen}
           >
             <span aria-hidden="true">+</span> Notes to self
           </button>
@@ -103,7 +125,7 @@ export function Notes() {
               disabled
             ></button>
           </div>
-        </div>
+        </form>
       </div>
       <div className="notes-toast" id="notes-toast">
         <p id="notes-status" role="status" aria-atomic="true"></p>

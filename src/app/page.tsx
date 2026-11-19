@@ -8,12 +8,15 @@ export const dynamic = "force-dynamic";
 export default async function Page({
   searchParams,
 }: {
-  searchParams: Promise<{ unlock?: string }>;
+  searchParams: Promise<{ unlock?: string; note?: string }>;
 }) {
   const request = new Request("https://scrapbook.local/", {
     headers: await headers(),
   });
-  if (await hasSiteSession(request)) return <Scrapbook />;
+  if (await hasSiteSession(request)) {
+    const { note } = await searchParams;
+    return <Scrapbook initialNoteOpen={note === "new"} />;
+  }
 
   const { unlock } = await searchParams;
   const messages = new Map([

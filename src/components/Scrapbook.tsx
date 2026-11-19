@@ -5,7 +5,11 @@ import { Notes } from "./Notes";
 import { WeatherBoard } from "./WeatherBoard";
 import { WeatherShortcut } from "./WeatherShortcut";
 
-export function Scrapbook() {
+export function Scrapbook({
+  initialNoteOpen = false,
+}: {
+  initialNoteOpen?: boolean;
+}) {
   return (
     <>
       <div className="masthead-shell">
@@ -25,7 +29,7 @@ export function Scrapbook() {
         <BirthdayNote />
         <MoviePlayer />
         <WeatherBoard initialPanels={weatherPanels()} />
-        <Notes />
+        <Notes initialOpen={initialNoteOpen} />
       </main>
     </>
   );

@@ -710,6 +710,32 @@ a { color: inherit; }
   background-size: 13px 13px;
 }
 .weather-note-copy { grid-area: summary; }
+.weather-note-heading {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.weather-about > summary {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  color: var(--muted);
+  cursor: pointer;
+  list-style: none;
+}
+.weather-about > summary::-webkit-details-marker { display: none; }
+.weather-about > summary:hover, .weather-about[open] > summary { background: #eee1ef; }
+.weather-about svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
 .weather-note::before {
   content: "";
   position: absolute;
@@ -993,7 +1019,19 @@ a { color: inherit; }
   clip-path: inset(50%);
   white-space: nowrap;
 }
-.weather-source { margin-top: 7px; color: #505d6e; font-size: 1rem; }
+.weather-source {
+  position: absolute;
+  z-index: 5;
+  inset-inline: 0;
+  top: calc(100% + 4px);
+  padding: 10px 12px;
+  border: 1px solid #dfcbdc;
+  border-radius: 4px 7px 5px 3px;
+  background: #fcf3de;
+  box-shadow: 1px 4px 12px #342a3520;
+  color: #505d6e;
+  font-size: 1.0625rem;
+}
 .weather-source a { text-underline-offset: 2px; white-space: nowrap; }
 
 @supports (grid-template-rows: subgrid) {
