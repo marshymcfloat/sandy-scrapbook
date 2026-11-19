@@ -22,7 +22,7 @@ function request(path, options = {}) {
     "/movie.mp4": method === "HEAD" ? routes.movieHead : routes.movie,
     "/weather": routes.weather,
     "/session": routes.session,
-  }[path];
+  }[new URL(path, origin).pathname];
   return handler(new Request(origin + path, options));
 }
 
@@ -225,6 +225,44 @@ test("MP4 route streams bounded, suffix, unsatisfiable, and full responses", asy
   assert.deepEqual(new Uint8Array(await complete.arrayBuffer()), fixture);
 });
 
+test("direct playback tickets require a session and only grant temporary movie access", async () => {
+  const Cookie = session.headers.get("Set-Cookie").split(";")[0];
+  const mint = "/movie.mp4?source=direct";
+  assert.equal((await request(mint)).status, 401);
+
+  const access = await request(mint, { headers: { Cookie, Range: "bytes=0-1" } });
+  assert.equal(access.status, 307);
+  assert.equal(access.headers.get("Cache-Control"), "private, no-store");
+  const playback = new URL(access.headers.get("Location"), origin);
+  assert.equal(playback.pathname, "/movie.mp4");
+  const ticket = playback.searchParams.get("ticket");
+  assert.match(ticket, /^\d+\.[A-Za-z0-9_-]{43}$/);
+  assert.ok(Number(ticket.split(".")[0]) <= Math.floor(Date.now() / 1000) + 4 * 60 * 60);
+
+  const range = await request(playback.pathname + playback.search, {
+    headers: { Range: "bytes=0-1" },
+  });
+  assert.equal(range.status, 206);
+  assert.equal(range.headers.get("Content-Range"), "bytes 0-1/16");
+  assert.deepEqual(new Uint8Array(await range.arrayBuffer()), fixture.slice(0, 2));
+  assert.equal((await request(`${mint}&ticket=${ticket}`)).status, 401);
+  assert.equal((await request("/session", {
+    headers: { Cookie: `__Host-sandyfave=${ticket}` },
+  })).status, 401);
+
+  const expired = Math.floor(Date.now() / 1000) - 1;
+  const material = JSON.stringify([secrets.SESSION_SECRET, secrets.SITE_PASSPHRASE]);
+  const expiredSignature = createHmac("sha256", material)
+    .update(`sandyfave/movie/v1/${expired}`).digest("base64url");
+  for (const invalid of [
+    ticket.replace(/\.(.)/, (_, char) => char === "a" ? ".b" : ".a"),
+    `${expired}.${expiredSignature}`,
+    Cookie.split("=")[1],
+  ]) {
+    assert.equal((await request(`/movie.mp4?ticket=${invalid}`)).status, 401);
+  }
+});
+
 test("repeated unlock attempts are limited", async () => {
   let response;
   for (let attempt = 0; attempt <= 10; attempt += 1) {
@@ -240,7 +278,7 @@ test("repeated unlock attempts are limited", async () => {
   );
 });
 
-test("Vercel forwards the scrapbook cookie and byte ranges and keeps redirects on its own site", async () => {
+test("Vercel directs movie playback to Cloudflare and keeps unlock redirects on its own site", async () => {
   const originalFetch = globalThis.fetch;
   const originalPlatform = process.env.VERCEL;
   const originalBackend = process.env.CLOUDFLARE_BACKEND_URL;
@@ -248,7 +286,7 @@ test("Vercel forwards the scrapbook cookie and byte ranges and keeps redirects o
   process.env.CLOUDFLARE_BACKEND_URL = "https://cloudflare.test";
   try {
     globalThis.fetch = async (url, options) => {
-      assert.equal(url.href, "https://cloudflare.test/movie.mp4");
+      assert.equal(url.href, "https://cloudflare.test/movie.mp4?source=direct");
       assert.equal(
         options.headers.get("Cookie"),
         "__Host-sandyfave=test-session",
@@ -281,6 +319,25 @@ test("Vercel forwards the scrapbook cookie and byte ranges and keeps redirects o
       new Uint8Array(await movie.arrayBuffer()),
       fixture.slice(3, 6),
     );
+
+    globalThis.fetch = async (url, options) => {
+      assert.equal(url.href, "https://cloudflare.test/movie.mp4?source=direct");
+      assert.equal(options.redirect, "manual");
+      return new Response(null, {
+        status: 307,
+        headers: { Location: "/movie.mp4?ticket=test-ticket" },
+      });
+    };
+    const direct = await request("/movie.mp4");
+    assert.equal(direct.status, 307);
+    assert.equal(direct.headers.get("Location"), "https://cloudflare.test/movie.mp4?ticket=test-ticket");
+    assert.equal(await direct.text(), "");
+
+    globalThis.fetch = async () => new Response(null, {
+      status: 307,
+      headers: { Location: "https://other.test/movie.mp4?ticket=test-ticket" },
+    });
+    assert.equal((await request("/movie.mp4")).status, 503);
 
     globalThis.fetch = async (url, options) => {
       assert.equal(url.href, "https://cloudflare.test/unlock");

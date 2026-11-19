@@ -63,7 +63,7 @@ To test the built Worker locally, stop the development server and run npm run pr
 
 The same Next.js project can also run on Vercel. Set the server environment variable `CLOUDFLARE_BACKEND_URL` to `https://sandyfave.sandyfave.workers.dev` and deploy the GitHub repository with the Next.js preset.
 
-Vercel renders the scrapbook pages and forwards unlock, lock, session validation, weather, and movie requests to Cloudflare. The movie continues to stream from the private R2 bucket, and both sites accept the Cloudflare production passphrase. Notes and playback position are saved separately for each site's browser origin.
+Vercel renders the scrapbook pages and forwards unlock, lock, session validation, and weather requests to Cloudflare. For movie playback, Cloudflare issues a temporary movie-only link after validating the session. The browser then streams directly from Cloudflare, which reads the movie from the private R2 bucket. Both sites accept the Cloudflare production passphrase. Notes and playback position are saved separately for each site's browser origin.
 
 ## Upload a replacement movie
 

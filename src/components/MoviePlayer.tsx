@@ -347,6 +347,7 @@ export function MoviePlayer() {
       const response = await fetch("/movie.mp4", {
         method: "HEAD",
         cache: "no-store",
+        redirect: "manual",
         signal: controller.signal,
       });
       if (

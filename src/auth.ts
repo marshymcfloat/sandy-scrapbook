@@ -53,8 +53,10 @@ function signingKey(secrets: Secrets) {
   ]);
 }
 
-function sessionMessage(expires: number) {
-  return encoder.encode(`sandyfave/v1/${expires}`);
+function tokenMessage(scope: "session" | "movie", expires: number) {
+  return encoder.encode(scope === "session"
+    ? `sandyfave/v1/${expires}`
+    : `sandyfave/movie/v1/${expires}`);
 }
 
 function cookie(value: string, maxAge: number): string {
@@ -63,28 +65,50 @@ function cookie(value: string, maxAge: number): string {
 
 export const clearSession = () => cookie("", 0);
 
-export async function createSession(secrets: Secrets): Promise<string> {
-  const expires = Math.floor(Date.now() / 1000) + SESSION_SECONDS;
-  const signature = await crypto.subtle.sign("HMAC", await signingKey(secrets), sessionMessage(expires));
+async function signToken(scope: "session" | "movie", expires: number, secrets: Secrets) {
+  const signature = await crypto.subtle.sign("HMAC", await signingKey(secrets), tokenMessage(scope, expires));
   const token = btoa(String.fromCharCode(...new Uint8Array(signature)))
     .replaceAll("+", "-")
     .replaceAll("/", "_")
     .replaceAll("=", "");
-  return cookie(`${expires}.${token}`, SESSION_SECONDS);
+  return `${expires}.${token}`;
 }
 
-export async function hasSession(request: Request, secrets: Partial<Secrets>): Promise<boolean> {
-  if (!hasSecrets(secrets)) return false;
-
-  const entry = request.headers.get("Cookie")?.split(/;\s*/).find((part) => part.startsWith(`${COOKIE_NAME}=`));
-  const parts = entry?.slice(COOKIE_NAME.length + 1).match(/^(\d{10,11})\.([A-Za-z0-9_-]{43})$/);
-  if (!parts) return false;
-
+async function verifyToken(token: string | null | undefined, scope: "session" | "movie", secrets: Secrets) {
+  const parts = token?.match(/^(\d{10,11})\.([A-Za-z0-9_-]{43})$/);
+  if (!parts) return null;
   const expires = Number(parts[1]);
-  if (expires <= Math.floor(Date.now() / 1000)) return false;
-
+  if (expires <= Math.floor(Date.now() / 1000)) return null;
   const signature = Uint8Array.from(atob(parts[2].replaceAll("-", "+").replaceAll("_", "/")), (character) =>
     character.charCodeAt(0),
   );
-  return crypto.subtle.verify("HMAC", await signingKey(secrets), signature, sessionMessage(expires));
+  const valid = await crypto.subtle.verify("HMAC", await signingKey(secrets), signature, tokenMessage(scope, expires));
+  return valid ? expires : null;
+}
+
+export async function createSession(secrets: Secrets): Promise<string> {
+  const expires = Math.floor(Date.now() / 1000) + SESSION_SECONDS;
+  return cookie(await signToken("session", expires, secrets), SESSION_SECONDS);
+}
+
+export async function sessionExpiration(request: Request, secrets: Partial<Secrets>) {
+  if (!hasSecrets(secrets)) return null;
+  const entry = request.headers.get("Cookie")?.split(/;\s*/).find((part) => part.startsWith(`${COOKIE_NAME}=`));
+  return verifyToken(entry?.slice(COOKIE_NAME.length + 1), "session", secrets);
+}
+
+export async function hasSession(request: Request, secrets: Partial<Secrets>): Promise<boolean> {
+  return (await sessionExpiration(request, secrets)) !== null;
+}
+
+export async function createMovieTicket(sessionExpires: number, secrets: Secrets) {
+  // Keep the playback URL stable across the browser's opening range requests.
+  const now = Math.floor(Date.now() / 1000);
+  const window = 15 * 60;
+  const expires = Math.min(sessionExpires, now - (now % window) + 4 * 60 * 60);
+  return signToken("movie", expires, secrets);
+}
+
+export async function hasMovieTicket(ticket: string | null, secrets: Secrets) {
+  return (await verifyToken(ticket, "movie", secrets)) !== null;
 }

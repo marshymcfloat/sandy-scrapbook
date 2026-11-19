@@ -1,5 +1,6 @@
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { hasSession } from "./auth";
+import { cloudflareBackendOrigin } from "./backend-origin";
 import { privateHeaders, textResponse } from "./responses";
 
 // Vercel renders the same React app while Cloudflare owns the private R2 access and sessions.
@@ -7,7 +8,7 @@ export async function forwardToCloudflare(
   request: Request,
 ): Promise<Response | null> {
   if (process.env.VERCEL !== "1") return null;
-  const backend = process.env.CLOUDFLARE_BACKEND_URL;
+  const backend = cloudflareBackendOrigin();
   if (!backend)
     return textResponse(
       "The scrapbook is getting ready. Try again later.",
@@ -20,6 +21,8 @@ export async function forwardToCloudflare(
     return textResponse("Open the shelf to continue.", 403);
   }
   const upstream = new URL(incoming.pathname + incoming.search, backend);
+  const directMovie = incoming.pathname === "/movie.mp4";
+  if (directMovie) upstream.search = "?source=direct";
   const headers = new Headers();
   for (const name of ["Content-Type", "Range", "If-Range"]) {
     const value = request.headers.get(name);
@@ -50,7 +53,7 @@ export async function forwardToCloudflare(
     const encoding = outgoing.get("Content-Encoding");
     outgoing.delete("Content-Encoding");
     outgoing.delete("Transfer-Encoding");
-    if (incoming.pathname !== "/movie.mp4" || (encoding && encoding.toLowerCase() !== "identity")) {
+    if (!directMovie || (encoding && encoding.toLowerCase() !== "identity")) {
       outgoing.delete("Content-Length");
     } else if (response.status === 206) {
       // The Worker can stream the requested bytes without a Content-Length header.
@@ -72,7 +75,17 @@ export async function forwardToCloudflare(
     const location = outgoing.get("Location");
     if (location) {
       const target = new URL(location, upstream);
-      outgoing.set("Location", target.pathname + target.search);
+      if (directMovie && response.status === 307) {
+        if (
+          target.origin !== backend || target.username || target.password ||
+          target.pathname !== "/movie.mp4" || !target.searchParams.has("ticket")
+        ) {
+          return textResponse("The movie is temporarily unavailable.", 503);
+        }
+        outgoing.set("Location", target.href);
+      } else {
+        outgoing.set("Location", target.pathname + target.search);
+      }
     }
     return new Response(response.body, {
       status: response.status,
