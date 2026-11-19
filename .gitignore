@@ -12,4 +12,5 @@ next-env.d.ts
 .production.json
 .playwright-cli/
 *.mp4
+!src/app/movie.mp4/
 *.webm
