@@ -47,7 +47,7 @@ before(async () => {
         export { GET as movie, HEAD as movieHead } from "./src/app/movie.mp4/route";
         export { GET as weather } from "./src/app/weather/route";
         export { GET as session } from "./src/app/session/route";
-        export { forwardToCloudflare } from "./src/backend";
+        export { getSiteAccess } from "./src/backend";
         export { hasSession } from "./src/auth";
       `,
       resolveDir: process.cwd(),
@@ -332,6 +332,27 @@ test("Vercel directs movie playback to Cloudflare and keeps unlock redirects on 
     assert.equal(direct.status, 307);
     assert.equal(direct.headers.get("Location"), "https://cloudflare.test/movie.mp4?ticket=test-ticket");
     assert.equal(await direct.text(), "");
+
+    const pageRequest = new Request(origin, {
+      headers: { Cookie: "__Host-sandyfave=test-session" },
+    });
+    assert.deepEqual(await routes.getSiteAccess(pageRequest), {
+      movieSource: "https://cloudflare.test/movie.mp4?ticket=test-ticket",
+      movieOrigin: "https://cloudflare.test",
+    });
+
+    globalThis.fetch = async (url, options) => {
+      assert.equal(url.href, "https://cloudflare.test/movie.mp4?source=direct");
+      assert.equal(options.method, "HEAD");
+      assert.equal(options.headers.get("Cookie"), null);
+      return new Response(null, { status: 401 });
+    };
+    assert.equal(await routes.getSiteAccess(new Request(origin)), null);
+
+    globalThis.fetch = async (url) => new Response(null, {
+      status: url.pathname === "/session" ? 204 : 503,
+    });
+    assert.deepEqual(await routes.getSiteAccess(pageRequest), { movieOrigin: "https://cloudflare.test" });
 
     globalThis.fetch = async () => new Response(null, {
       status: 307,

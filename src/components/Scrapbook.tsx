@@ -7,8 +7,12 @@ import { WeatherShortcut } from "./WeatherShortcut";
 
 export function Scrapbook({
   initialNoteOpen = false,
+  movieSource,
+  movieOrigin,
 }: {
   initialNoteOpen?: boolean;
+  movieSource?: string;
+  movieOrigin?: string;
 }) {
   return (
     <>
@@ -27,7 +31,7 @@ export function Scrapbook({
       </div>
       <main className="scrapbook">
         <BirthdayNote />
-        <MoviePlayer />
+        <MoviePlayer movieSource={movieSource} movieOrigin={movieOrigin} />
         <WeatherBoard initialPanels={weatherPanels()} />
         <Notes initialOpen={initialNoteOpen} />
       </main>

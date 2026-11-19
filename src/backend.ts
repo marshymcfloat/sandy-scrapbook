@@ -101,12 +101,30 @@ export async function forwardToCloudflare(
   }
 }
 
-export async function hasSiteSession(request: Request) {
+export interface SiteAccess {
+  movieSource?: string;
+  movieOrigin?: string;
+}
+
+export async function getSiteAccess(request: Request): Promise<SiteAccess | null> {
+  const movieOrigin = cloudflareBackendOrigin();
+  if (movieOrigin) {
+    const playback = await forwardToCloudflare(
+      new Request(new URL("/movie.mp4", request.url), {
+        method: "HEAD",
+        headers: request.headers,
+      }),
+    );
+    if (playback?.status === 401) return null;
+    const movieSource = playback?.headers.get("Location");
+    if (playback?.status === 307 && movieSource) return { movieSource, movieOrigin };
+  }
+
   const sessionRequest = new Request(new URL("/session", request.url), {
     headers: request.headers,
   });
   const forwarded = await forwardToCloudflare(sessionRequest);
-  if (forwarded) return forwarded.status === 204;
+  if (forwarded) return forwarded.status === 204 ? { movieOrigin: movieOrigin ?? undefined } : null;
   const { env } = await getCloudflareContext({ async: true });
-  return hasSession(request, env);
+  return await hasSession(request, env) ? {} : null;
 }

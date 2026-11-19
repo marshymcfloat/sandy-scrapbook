@@ -36,7 +36,11 @@ function timeLabel(seconds: number) {
     : `${minutes}:${remainder}`;
 }
 
-export function MoviePlayer() {
+export function MoviePlayer({ movieSource, movieOrigin }: {
+  movieSource?: string;
+  movieOrigin?: string;
+}) {
+  const source = movieSource ?? "/movie.mp4";
   const root = useRef<HTMLElement>(null);
   const screen = useRef<HTMLDivElement>(null);
   const movie = useRef<HTMLVideoElement>(null);
@@ -68,6 +72,7 @@ export function MoviePlayer() {
   const [resumePosition, setResumePosition] = useState(0);
   const [feedback, setFeedback] = useState("");
   const [unlockAgain, setUnlockAgain] = useState(false);
+  const [offerCloudflare, setOfferCloudflare] = useState(false);
   const dragging = draftTime !== null;
 
   const savePosition = useCallback(() => {
@@ -183,13 +188,22 @@ export function MoviePlayer() {
       window.location.assign("/");
       return;
     }
+    if (movieSource && (!video.hasAttribute("src") || video.error)) {
+      const ticket = new URL(movieSource).searchParams.get("ticket");
+      const expires = Number(ticket?.split(".")[0]);
+      if (expires * 1000 <= Date.now()) {
+        window.location.reload();
+        return;
+      }
+    }
     errorRequest.current?.abort();
     setFeedback("");
+    setOfferCloudflare(false);
     setActive(true);
     setEnded(false);
     if (!video.hasAttribute("src")) {
       setLoading(true);
-      video.src = "/movie.mp4";
+      video.src = source;
     } else if (video.error) {
       canRemember.current = false;
       setLoading(true);
@@ -340,6 +354,7 @@ export function MoviePlayer() {
     setLoading(false);
     setSettingsOpen(false);
     setFeedback("The movie couldn’t load. Try again.");
+    setOfferCloudflare(true);
     const controller = new AbortController();
     errorRequest.current?.abort();
     errorRequest.current = controller;
@@ -356,6 +371,7 @@ export function MoviePlayer() {
         !controller.signal.aborted
       ) {
         setUnlockAgain(true);
+        setOfferCloudflare(false);
         setFeedback("Unlock the shelf to keep watching.");
       }
     } catch {
@@ -405,6 +421,9 @@ export function MoviePlayer() {
         </button>
         <p className="player-feedback" id="movie-status" role="status">
           {feedback}
+          {offerCloudflare && movieOrigin && (
+            <> <a href={movieOrigin}>Watch on Cloudflare</a></>
+          )}
         </p>
       </div>
       <div className="movie-mat">
@@ -715,7 +734,7 @@ export function MoviePlayer() {
           <noscript>
             <video
               aria-label="Forrest Gump"
-              src="/movie.mp4"
+              src={source}
               poster="/assets/scrapbook-bench.webp"
               preload="none"
               controls

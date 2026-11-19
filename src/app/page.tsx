@@ -1,5 +1,5 @@
 import { headers } from "next/headers";
-import { hasSiteSession } from "../backend";
+import { getSiteAccess } from "../backend";
 import { Gate } from "../components/Gate";
 import { Scrapbook } from "../components/Scrapbook";
 
@@ -13,9 +13,10 @@ export default async function Page({
   const request = new Request("https://scrapbook.local/", {
     headers: await headers(),
   });
-  if (await hasSiteSession(request)) {
+  const access = await getSiteAccess(request);
+  if (access) {
     const { note } = await searchParams;
-    return <Scrapbook initialNoteOpen={note === "new"} />;
+    return <Scrapbook initialNoteOpen={note === "new"} {...access} />;
   }
 
   const { unlock } = await searchParams;
